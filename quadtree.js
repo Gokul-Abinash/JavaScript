@@ -22,6 +22,13 @@ class Rectangle
              point.y >= this.y - this.h && 
              point.y <= this.y + this.h)
     }
+    intersects(range)
+    {
+        return !(range.x-range.w > this.x+this.w || 
+            range.x+range.w < this.x-this.w || 
+            range.y-range.h > this.y+this.h ||
+            range.y+range.h < this.y-this.h)
+    }
 }
 class QuadTree
 {
@@ -57,14 +64,14 @@ class QuadTree
         if(this.points.length < this.capacity)
         {
             this.points.push(point);
-            return true
+            return true;
         }
         else
         {
             if(!this.divided)
             {
                 this.subdivide();
-                this.divided=true;
+                //this.divided=true;
             }
             if(this.northeast.insert(point))
             {
@@ -84,24 +91,53 @@ class QuadTree
             }
         }
     }
+    query(range,found)
+    {
+        if(!found)
+        {
+            found=[];
+        }
+        if(!this.boundary.intersects(range))
+        {
+            return; 
+        }
+        else
+        {
+            for(let p of this.points)
+            {
+                if(range.contains(p))
+                {
+                    found.push(p);
+                }
+            }
+            if(this.divided)
+            {
+                this.northwest.query(range,found);
+                this.northeast.query(range,found);
+                this.southwest.query(range,found);
+                this.southeast.query(range,found);
+            }
+            return found;
+        }
+    }
     show()
     {
-        stroke(255);
-        strokeWeight(1);
+        stroke(100);
         noFill();
+        strokeWeight(1);
         rectMode(CENTER);
         rect(this.boundary.x,this.boundary.y,this.boundary.w*2,this.boundary.h*2);
+        for(let p of this.points)
+        {
+            strokeWeight(2);
+            point(p.x,p.y)
+        }
         if(this.divided)
         {
             this.northeast.show();
             this.northwest.show();
             this.southeast.show();
             this.southwest.show();
-        }
-        for(let p of this.points)
-        {
-            strokeWeight(4);
-            point(p.x,p.y)
         }
     }
 }
